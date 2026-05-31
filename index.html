@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HFB Studioz — Crafting Delightful Mobile Experiences</title>
+  <meta name="description" content="HFB Studioz is an indie app studio building beautiful, privacy-first Android apps. Discover Statifly and more." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Reset & Base ──────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      /* Brand palette – extracted from Statifly Compose theme */
+      --primary: #00A86B;
+      --primary-light: #6DEBB0;
+      --primary-container: #C8F5E0;
+      --accent: #49FF8D;
+      --bg-dark: #0D1F17;
+      --surface-dark: #122B1E;
+      --surface-container: #1A3526;
+      --surface-container-high: #243F30;
+      --surface-bright: #344F3D;
+      --on-surface: #E0F2E9;
+      --on-surface-variant: #A0C4AF;
+      --outline: #6F9E85;
+      --scrim: #000000;
+      --error: #FFB4AB;
+
+      /* Typography */
+      --font-heading: 'Hanken Grotesk', system-ui, sans-serif;
+      --font-body: 'Plus Jakarta Sans', 'Hanken Grotesk', system-ui, sans-serif;
+
+      /* Shapes – matching StatiflyShapes */
+      --radius-xs: 4px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 28px;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-dark);
+      color: var(--on-surface);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── Ambient glow blobs ────────────────────────────── */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .ambient .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.18;
+      animation: drift 18s ease-in-out infinite alternate;
+    }
+    .ambient .blob--1 {
+      width: 600px; height: 600px;
+      background: var(--primary);
+      top: -10%; left: -8%;
+    }
+    .ambient .blob--2 {
+      width: 500px; height: 500px;
+      background: var(--accent);
+      bottom: 10%; right: -5%;
+      animation-delay: -6s;
+      animation-duration: 22s;
+    }
+    .ambient .blob--3 {
+      width: 350px; height: 350px;
+      background: var(--primary-light);
+      top: 50%; left: 40%;
+      animation-delay: -12s;
+      animation-duration: 26s;
+    }
+    @keyframes drift {
+      0%   { transform: translate(0, 0) scale(1); }
+      50%  { transform: translate(40px, -30px) scale(1.08); }
+      100% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    /* ─── Layout helpers ────────────────────────────────── */
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    section { padding: 100px 0; }
+
+    /* ─── Navigation ────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 18px 0;
+      transition: background 0.4s, box-shadow 0.4s, padding 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(13, 31, 23, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 1px 0 rgba(109, 235, 176, 0.08);
+      padding: 12px 0;
+    }
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--on-surface);
+    }
+    .nav-logo {
+      width: 36px; height: 36px;
+    }
+    .nav-name {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+    .nav-links {
+      display: flex; gap: 32px; list-style: none;
+    }
+    .nav-links a {
+      color: var(--on-surface-variant);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.25s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0;
+      width: 0; height: 2px;
+      background: var(--accent);
+      border-radius: 1px;
+      transition: width 0.3s ease;
+    }
+    .nav-links a:hover { color: var(--on-surface); }
+    .nav-links a:hover::after { width: 100%; }
+
+    /* ─── Hero ──────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding-top: 80px;
+    }
+    .hero-inner {
+      display: flex;
+      align-items: center;
+      gap: 64px;
+    }
+    .hero-text {
+      flex: 1;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-container);
+      border: 1px solid var(--surface-container-high);
+      border-radius: var(--radius-xl);
+      padding: 8px 18px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 28px;
+    }
+    .hero-badge .dot {
+      width: 8px; height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+    .hero h1 {
+      font-family: var(--font-heading);
+      font-weight: 900;
+      font-size: clamp(2.6rem, 5.5vw, 4rem);
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      margin-bottom: 20px;
+    }
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--primary-light) 50%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: 1.12rem;
+      color: var(--on-surface-variant);
+      max-width: 480px;
+      line-height: 1.75;
+      margin-bottom: 36px;
+    }
+    .hero-cta {
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+    .btn--primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(0, 168, 107, 0.3);
+    }
+    .btn--primary:hover {
+      background: #00bf78;
+      box-shadow: 0 8px 32px rgba(0, 168, 107, 0.45);
+      transform: translateY(-2px);
+    }
+    .btn--ghost {
+      background: transparent;
+      color: var(--on-surface-variant);
+      border: 1px solid var(--outline);
+    }
+    .btn--ghost:hover {
+      border-color: var(--primary-light);
+      color: var(--on-surface);
+      background: rgba(109, 235, 176, 0.06);
+    }
+
+    /* Hero visual — Statifly logo S */
+    .hero-visual {
+      flex: 0 0 auto;
+      position: relative;
+    }
+    .hero-phone {
+      width: 280px;
+      height: 560px;
+      background: var(--surface-dark);
+      border-radius: 36px;
+      border: 2px solid var(--surface-container-high);
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 24px 80px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(109, 235, 176, 0.05),
+        inset 0 0 60px rgba(73, 255, 141, 0.03);
+    }
+    .hero-phone .notch {
+      position: absolute;
+      top: 8px; left: 50%;
+      transform: translateX(-50%);
+      width: 100px; height: 28px;
+      background: var(--bg-dark);
+      border-radius: 0 0 16px 16px;
+      z-index: 2;
+    }
+    .hero-phone .screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(170deg, var(--surface-container) 0%, var(--bg-dark) 100%);
+    }
+    .hero-phone .app-icon {
+      width: 80px; height: 80px;
+    }
+    .hero-phone .app-name {
+      position: absolute;
+      bottom: 80px; left: 0; right: 0;
+      text-align: center;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--on-surface);
+    }
+    .hero-phone .app-tagline {
+      position: absolute;
+      bottom: 56px; left: 0; right: 0;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Floating elements around phone */
+    .float-badge {
+      position: absolute;
+      background: var(--surface-container);
+      border: 1px solid var(--surface-container-high);
+      border-radius: var(--radius-lg);
+      padding: 12px 18px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--on-surface);
+      white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      animation: floatBadge 6s ease-in-out infinite;
+    }
+    .float-badge--1 {
+      top: 60px; right: -60px;
+      animation-delay: 0s;
+    }
+    .float-badge--2 {
+      bottom: 120px; left: -80px;
+      animation-delay: -2s;
+    }
+    .float-badge--3 {
+      bottom: 40px; right: -50px;
+      animation-delay: -4s;
+    }
+    .float-badge .emoji { margin-right: 6px; }
+    @keyframes floatBadge {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    /* ─── Section headers ───────────────────────────────── */
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .section-label .line {
+      width: 28px; height: 2px;
+      background: var(--accent);
+      border-radius: 1px;
+    }
+    .section-title {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+      margin-bottom: 16px;
+    }
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--on-surface-variant);
+      max-width: 520px;
+      line-height: 1.7;
+    }
+
+    /* ─── Product Showcase (Statifly) ───────────────────── */
+    .product {
+      background: var(--surface-dark);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--surface-container);
+      padding: 56px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .product::before {
+      content: '';
+      position: absolute;
+      top: -100px; right: -100px;
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(73, 255, 141, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .product-info { position: relative; z-index: 1; }
+    .product-icon {
+      width: 64px; height: 64px;
+      border-radius: var(--radius-lg);
+      margin-bottom: 20px;
+      background: #F5F7F4;
+      padding: 8px;
+    }
+    .product-info h3 {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .product-tagline {
+      color: var(--primary-light);
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+    .product-desc {
+      color: var(--on-surface-variant);
+      line-height: 1.75;
+      margin-bottom: 28px;
+    }
+    .feature-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+    .pill {
+      padding: 7px 16px;
+      background: var(--surface-container);
+      border-radius: var(--radius-xl);
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--on-surface-variant);
+      border: 1px solid var(--surface-container-high);
+      transition: all 0.25s;
+    }
+    .pill:hover {
+      border-color: var(--primary);
+      color: var(--on-surface);
+      background: rgba(0, 168, 107, 0.08);
+    }
+
+    /* Features grid on product card */
+    .product-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--surface-container);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      border: 1px solid rgba(109, 235, 176, 0.06);
+      transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      border-color: rgba(109, 235, 176, 0.15);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    }
+    .feature-card .icon {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .feature-card h4 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+    .feature-card p {
+      font-size: 0.82rem;
+      color: var(--on-surface-variant);
+      line-height: 1.55;
+    }
+
+    /* ─── Values / About ────────────────────────────────── */
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 56px;
+    }
+    .value-card {
+      background: var(--surface-dark);
+      border: 1px solid var(--surface-container);
+      border-radius: var(--radius-lg);
+      padding: 32px 28px;
+      transition: all 0.35s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .value-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 3px;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+    .value-card:hover::after { opacity: 1; }
+    .value-card:hover {
+      border-color: var(--surface-container-high);
+      transform: translateY(-6px);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+    }
+    .value-icon {
+      width: 48px; height: 48px;
+      background: var(--surface-container);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+    }
+    .value-card h3 {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.15rem;
+      margin-bottom: 10px;
+    }
+    .value-card p {
+      font-size: 0.9rem;
+      color: var(--on-surface-variant);
+      line-height: 1.65;
+    }
+
+    /* ─── Contact ───────────────────────────────────────── */
+    #contact .container {
+      text-align: center;
+    }
+    #contact .section-subtitle {
+      margin: 0 auto 40px;
+    }
+    .contact-card {
+      background: var(--surface-dark);
+      border: 1px solid var(--surface-container);
+      border-radius: var(--radius-xl);
+      padding: 48px;
+      max-width: 560px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+    .contact-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(73, 255, 141, 0.03) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .contact-links {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      z-index: 1;
+    }
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      background: var(--surface-container);
+      border: 1px solid var(--surface-container-high);
+      border-radius: var(--radius-md);
+      text-decoration: none;
+      color: var(--on-surface);
+      text-align: left;
+      transition: all 0.25s;
+    }
+    .contact-link:hover {
+      border-color: var(--primary);
+      background: rgba(0, 168, 107, 0.06);
+      transform: translateX(4px);
+    }
+    .contact-link .c-icon {
+      font-size: 1.3rem;
+      width: 40px; height: 40px;
+      background: var(--surface-container-high);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .contact-link .c-label {
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+    .contact-link .c-value {
+      font-size: 0.82rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* ─── Footer ────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--surface-container);
+      padding: 40px 0;
+      position: relative;
+      z-index: 1;
+    }
+    footer .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .footer-brand svg { width: 28px; height: 28px; }
+    .footer-brand span {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .footer-copy {
+      font-size: 0.82rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* ─── Scroll reveal ─────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── Responsive ────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .hero-inner { flex-direction: column; text-align: center; gap: 48px; }
+      .hero p { margin: 0 auto 36px; }
+      .hero-cta { justify-content: center; }
+      .product { grid-template-columns: 1fr; padding: 36px 24px; }
+      .values-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 640px) {
+      .hero-phone { width: 220px; height: 440px; }
+      .float-badge { display: none; }
+      section { padding: 64px 0; }
+      .product-features { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Ambient background glow -->
+  <div class="ambient" aria-hidden="true">
+    <div class="blob blob--1"></div>
+    <div class="blob blob--2"></div>
+    <div class="blob blob--3"></div>
+  </div>
+
+  <!-- ═══ Navigation ═══ -->
+  <nav id="navbar">
+    <div class="container">
+      <a href="#" class="nav-brand">
+        <!-- Statifly "S" logo inline SVG -->
+        <svg class="nav-logo" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="512" height="512" rx="120" fill="#F5F7F4"/>
+          <path d="M144 192C144 166.54 154.11 142.12 172.12 124.12C190.12 106.11 214.54 96 240 96H336V160H240C231.51 160 223.37 163.37 217.37 169.37C211.37 175.37 208 183.51 208 192C208 200.49 211.37 208.63 217.37 214.63C223.37 220.63 231.51 224 240 224H272C297.46 224 321.88 234.11 339.88 252.12C357.89 270.12 368 294.54 368 320C368 345.46 357.89 369.88 339.88 387.88C321.88 405.89 297.46 416 272 416H144V352H272C280.49 352 288.63 348.63 294.63 342.63C300.63 336.63 304 328.49 304 320C304 311.51 300.63 303.37 294.63 297.37C288.63 291.37 280.49 288 272 288H240C214.54 288 190.12 277.89 172.12 259.88C154.11 241.88 144 217.46 144 192Z" fill="#49FF8D"/>
+        </svg>
+        <span class="nav-name">HFB Studioz</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#product">Product</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ═══ Hero ═══ -->
+  <section class="hero" id="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <div class="hero-badge">
+            <span class="dot"></span>
+            Indie App Studio
+          </div>
+          <h1>Crafting <span class="highlight">Delightful</span> Mobile Experiences</h1>
+          <p>We build beautifully designed, privacy-first Android apps that people love to use every day.</p>
+          <div class="hero-cta">
+            <a href="#product" class="btn btn--primary">
+              <span>Explore Statifly</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="#contact" class="btn btn--ghost">Get in Touch</a>
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-phone">
+            <div class="notch"></div>
+            <div class="screen">
+              <svg class="app-icon" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M144 192C144 166.54 154.11 142.12 172.12 124.12C190.12 106.11 214.54 96 240 96H336V160H240C231.51 160 223.37 163.37 217.37 169.37C211.37 175.37 208 183.51 208 192C208 200.49 211.37 208.63 217.37 214.63C223.37 220.63 231.51 224 240 224H272C297.46 224 321.88 234.11 339.88 252.12C357.89 270.12 368 294.54 368 320C368 345.46 357.89 369.88 339.88 387.88C321.88 405.89 297.46 416 272 416H144V352H272C280.49 352 288.63 348.63 294.63 342.63C300.63 336.63 304 328.49 304 320C304 311.51 300.63 303.37 294.63 297.37C288.63 291.37 280.49 288 272 288H240C214.54 288 190.12 277.89 172.12 259.88C154.11 241.88 144 217.46 144 192Z" fill="#49FF8D"/>
+              </svg>
+              <span class="app-name">Statifly</span>
+              <span class="app-tagline">Status Saver</span>
+            </div>
+          </div>
+          <div class="float-badge float-badge--1">
+            <span class="emoji">🎨</span> Creator Studio
+          </div>
+          <div class="float-badge float-badge--2">
+            <span class="emoji">🔐</span> Privacy-First
+          </div>
+          <div class="float-badge float-badge--3">
+            <span class="emoji">🎬</span> Elevate Reels
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Product — Statifly ═══ -->
+  <section id="product">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label"><span class="line"></span> Our Product</div>
+        <h2 class="section-title">Meet Statifly</h2>
+        <p class="section-subtitle">The all-in-one status toolkit — save, create, organize, and share stunning content effortlessly.</p>
+      </div>
+
+      <div class="product reveal" style="margin-top:48px">
+        <div class="product-info">
+          <svg class="product-icon" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="512" height="512" rx="120" fill="#F5F7F4"/>
+            <path d="M144 192C144 166.54 154.11 142.12 172.12 124.12C190.12 106.11 214.54 96 240 96H336V160H240C231.51 160 223.37 163.37 217.37 169.37C211.37 175.37 208 183.51 208 192C208 200.49 211.37 208.63 217.37 214.63C223.37 220.63 231.51 224 240 224H272C297.46 224 321.88 234.11 339.88 252.12C357.89 270.12 368 294.54 368 320C368 345.46 357.89 369.88 339.88 387.88C321.88 405.89 297.46 416 272 416H144V352H272C280.49 352 288.63 348.63 294.63 342.63C300.63 336.63 304 328.49 304 320C304 311.51 300.63 303.37 294.63 297.37C288.63 291.37 280.49 288 272 288H240C214.54 288 190.12 277.89 172.12 259.88C154.11 241.88 144 217.46 144 192Z" fill="#49FF8D"/>
+          </svg>
+          <h3>Statifly</h3>
+          <div class="product-tagline">Status Saver · Creator · Vault</div>
+          <p class="product-desc">
+            Save WA statuses before they disappear. Create beautiful text, photo, and video statuses with custom fonts and stickers. Organize everything in smart folders.
+          </p>
+          <div class="feature-pills">
+            <span class="pill">One-Tap Save</span>
+            <span class="pill">Custom Fonts</span>
+            <span class="pill">Smart Folders</span>
+            <span class="pill">Elevate Reels</span>
+            <span class="pill">Offline-First</span>
+            <span class="pill">Dark Mode</span>
+          </div>
+          <a href="https://play.google.com/store/apps/details?id=com.hfbstudioz.statifly" class="btn btn--primary" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3.61 1.814L13.793 12 3.61 22.186a.996.996 0 01-.61-.92V2.734c0-.382.218-.72.61-.92zM14.854 13.06l2.844 1.66-2.152 2.152-3.37-3.37 2.678-2.442zm3.926-2.293l2.15 1.256a1 1 0 010 1.754l-2.15 1.256-2.478-2.133 2.478-2.133zM14.854 10.94l-2.678-2.442 3.37-3.37 2.152 2.152-2.844 1.66z"/></svg>
+            Google Play
+          </a>
+        </div>
+        <div class="product-features">
+          <div class="feature-card">
+            <span class="icon">📥</span>
+            <h4>Status Saver</h4>
+            <p>Preview and save photos & videos with a single tap before they vanish.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon">✨</span>
+            <h4>Creator Studio</h4>
+            <p>Design with custom fonts, stickers, drawings, and video overlays.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon">📁</span>
+            <h4>Smart Vault</h4>
+            <p>Auto-organize into folders. Search, batch manage, and backup.</p>
+          </div>
+          <div class="feature-card">
+            <span class="icon">🎬</span>
+            <h4>Elevate Reels</h4>
+            <p>Turn product photos into eye-catching vertical video reels.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ About / Values ═══ -->
+  <section id="about">
+    <div class="container">
+      <div class="reveal" style="text-align:center">
+        <div class="section-label" style="justify-content:center"><span class="line"></span> What We Believe</div>
+        <h2 class="section-title">Built with Care</h2>
+        <p class="section-subtitle" style="margin:0 auto">Every pixel and every line of code is crafted with purpose — to create apps that respect your time and your data.</p>
+      </div>
+      <div class="values-grid">
+        <div class="value-card reveal">
+          <div class="value-icon">🔒</div>
+          <h3>Privacy First</h3>
+          <p>Everything stays on your device. No uploads, no tracking, no compromises. Your data is yours alone.</p>
+        </div>
+        <div class="value-card reveal">
+          <div class="value-icon">🎨</div>
+          <h3>Design Obsessed</h3>
+          <p>Material 3 design with hand-tuned color palettes, Hanken Grotesk typography, and butter-smooth animations.</p>
+        </div>
+        <div class="value-card reveal">
+          <div class="value-icon">⚡</div>
+          <h3>Performance Driven</h3>
+          <p>Offline-first architecture, minimal footprint, and instant interactions. Fast by design, not by accident.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Contact ═══ -->
+  <section id="contact">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label" style="justify-content:center"><span class="line"></span> Let's Connect</div>
+        <h2 class="section-title">Get in Touch</h2>
+        <p class="section-subtitle">Have feedback, a feature idea, or just want to say hello? We'd love to hear from you.</p>
+      </div>
+      <div class="contact-card reveal">
+        <div class="contact-links">
+          <a href="mailto:hfbstudioz@gmail.com" class="contact-link">
+            <span class="c-icon">✉️</span>
+            <div>
+              <div class="c-label">Email</div>
+              <div class="c-value">hfbstudioz@gmail.com</div>
+            </div>
+          </a>
+          <a href="https://play.google.com/store/apps/dev?id=YOUR_DEV_ID" class="contact-link" target="_blank" rel="noopener">
+            <span class="c-icon">🏪</span>
+            <div>
+              <div class="c-label">Google Play</div>
+              <div class="c-value">HFB Studioz on Play Store</div>
+            </div>
+          </a>
+          <a href="#" class="contact-link">
+            <span class="c-icon">💬</span>
+            <div>
+              <div class="c-label">In-App Feedback</div>
+              <div class="c-value">More → Send Feedback inside Statifly</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ Footer ═══ -->
+  <footer>
+    <div class="container">
+      <div class="footer-brand">
+        <svg width="28" height="28" viewBox="0 0 512 512" fill="none">
+          <rect width="512" height="512" rx="120" fill="#F5F7F4"/>
+          <path d="M144 192C144 166.54 154.11 142.12 172.12 124.12C190.12 106.11 214.54 96 240 96H336V160H240C231.51 160 223.37 163.37 217.37 169.37C211.37 175.37 208 183.51 208 192C208 200.49 211.37 208.63 217.37 214.63C223.37 220.63 231.51 224 240 224H272C297.46 224 321.88 234.11 339.88 252.12C357.89 270.12 368 294.54 368 320C368 345.46 357.89 369.88 339.88 387.88C321.88 405.89 297.46 416 272 416H144V352H272C280.49 352 288.63 348.63 294.63 342.63C300.63 336.63 304 328.49 304 320C304 311.51 300.63 303.37 294.63 297.37C288.63 291.37 280.49 288 272 288H240C214.54 288 190.12 277.89 172.12 259.88C154.11 241.88 144 217.46 144 192Z" fill="#49FF8D"/>
+        </svg>
+        <span>HFB Studioz</span>
+      </div>
+      <span class="footer-copy">&copy; 2026 HFB Studioz. All rights reserved.</span>
+    </div>
+  </footer>
+
+  <script>
+    /* ── Navbar scroll effect ── */
+    const nav = document.getElementById('navbar');
+    const onScroll = () => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    /* ── Scroll reveal (IntersectionObserver) ── */
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry, idx) => {
+          if (entry.isIntersecting) {
+            // Stagger children slightly
+            entry.target.style.transitionDelay = `${idx * 80}ms`;
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+    );
+    reveals.forEach((el) => observer.observe(el));
+
+    /* ── Smooth anchor scrolling ── */
+    document.querySelectorAll('a[href^="#"]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
